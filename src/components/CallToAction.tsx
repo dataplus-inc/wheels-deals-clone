@@ -1,8 +1,13 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Phone, MapPin, Clock } from "lucide-react";
+import AppointmentDialog from "./AppointmentDialog";
 
 const CallToAction = () => {
+  const [appointmentOpen, setAppointmentOpen] = useState(false);
+
   return (
+    <>
     <section id="contact" className="py-20 bg-foreground text-background">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -11,7 +16,7 @@ const CallToAction = () => {
             <p className="text-lg mb-8 text-background/80">
               Schedule your appointment today and experience the Wheels & Deals difference. Quality service, competitive pricing, and expert care for your vehicle.
             </p>
-            <Button size="lg" variant="secondary" className="text-lg px-10 py-6 h-auto">
+            <Button size="lg" variant="secondary" className="text-lg px-10 py-6 h-auto" onClick={() => setAppointmentOpen(true)}>
               Schedule An Appointment
             </Button>
           </div>
@@ -51,6 +56,9 @@ const CallToAction = () => {
         </div>
       </div>
     </section>
+
+    <AppointmentDialog open={appointmentOpen} onOpenChange={setAppointmentOpen} />
+    </>
   );
 };
 

@@ -1,10 +1,15 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, CheckCircle2 } from "lucide-react";
 import heroImage from "@/assets/hero-tires.jpg";
+import AppointmentDialog from "./AppointmentDialog";
 
 const Hero = () => {
+  const [appointmentOpen, setAppointmentOpen] = useState(false);
+
   return (
+    <>
     <section className="relative min-h-[600px] flex items-center bg-foreground text-background overflow-hidden">
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-40"
@@ -63,13 +68,16 @@ const Hero = () => {
               </div>
             </div>
             
-            <Button size="lg" className="text-base px-8">
+            <Button size="lg" className="text-base px-8" onClick={() => setAppointmentOpen(true)}>
               Schedule An Appointment
             </Button>
           </div>
         </div>
       </div>
     </section>
+
+    <AppointmentDialog open={appointmentOpen} onOpenChange={setAppointmentOpen} />
+    </>
   );
 };
 

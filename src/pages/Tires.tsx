@@ -28,7 +28,7 @@ const Tires = () => {
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Tire Finder Form */}
-            <div className="bg-background/95 backdrop-blur p-8 rounded-lg shadow-2xl">
+            <div className="bg-white p-8 rounded-lg shadow-2xl">
               <TireFinder />
             </div>
 

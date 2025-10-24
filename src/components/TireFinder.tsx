@@ -137,8 +137,8 @@ const TireFinder = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h3 className="text-2xl font-bold text-foreground mb-2">Request a Quotation</h3>
-          <p className="text-muted-foreground">
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Request a Quotation</h3>
+          <p className="text-gray-700 font-medium">
             {searchType === "vehicle" 
               ? `${year} ${make} ${model} - Tire Size: ${selectedSize}`
               : `Tire Size: ${directSize}`}
@@ -147,45 +147,49 @@ const TireFinder = () => {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="quote-name">Name *</Label>
+            <Label htmlFor="quote-name" className="text-gray-900 font-semibold">Name *</Label>
             <Input
               id="quote-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
+              className="bg-white border-gray-300 text-gray-900"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="quote-email">Email *</Label>
+            <Label htmlFor="quote-email" className="text-gray-900 font-semibold">Email *</Label>
             <Input
               id="quote-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
+              className="bg-white border-gray-300 text-gray-900"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="quote-phone">Phone *</Label>
+            <Label htmlFor="quote-phone" className="text-gray-900 font-semibold">Phone *</Label>
             <Input
               id="quote-phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="(555) 123-4567"
+              className="bg-white border-gray-300 text-gray-900"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="quote-notes">Additional Notes</Label>
+            <Label htmlFor="quote-notes" className="text-gray-900 font-semibold">Additional Notes</Label>
             <Textarea
               id="quote-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any special requests or questions..."
               rows={3}
+              className="bg-white border-gray-300 text-gray-900"
             />
           </div>
         </div>
@@ -212,21 +216,21 @@ const TireFinder = () => {
   return (
     <div className="space-y-6">
       <Tabs value={searchType} onValueChange={setSearchType}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="vehicle" className="font-bold">Shop Tires by Vehicle</TabsTrigger>
-          <TabsTrigger value="size" className="font-bold">Shop Tires by Size</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-gray-200">
+          <TabsTrigger value="vehicle" className="font-bold text-gray-900 data-[state=active]:bg-white">Shop Tires by Vehicle</TabsTrigger>
+          <TabsTrigger value="size" className="font-bold text-gray-900 data-[state=active]:bg-white">Shop Tires by Size</TabsTrigger>
         </TabsList>
 
         <TabsContent value="vehicle" className="space-y-4 mt-6">
           <div className="space-y-2">
-            <Label htmlFor="year">Year</Label>
+            <Label htmlFor="year" className="text-gray-900 font-semibold">Year</Label>
             <Select value={year} onValueChange={setYear}>
-              <SelectTrigger id="year">
+              <SelectTrigger id="year" className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Select year" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border-gray-300 z-50">
                 {years.map((y) => (
-                  <SelectItem key={y} value={y}>
+                  <SelectItem key={y} value={y} className="text-gray-900">
                     {y}
                   </SelectItem>
                 ))}
@@ -235,14 +239,14 @@ const TireFinder = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="make">Make</Label>
+            <Label htmlFor="make" className="text-gray-900 font-semibold">Make</Label>
             <Select value={make} onValueChange={setMake} disabled={!year}>
-              <SelectTrigger id="make">
+              <SelectTrigger id="make" className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Select make" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border-gray-300 z-50">
                 {makes.map((m) => (
-                  <SelectItem key={m} value={m}>
+                  <SelectItem key={m} value={m} className="text-gray-900">
                     {m}
                   </SelectItem>
                 ))}
@@ -251,14 +255,14 @@ const TireFinder = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="model">Model</Label>
+            <Label htmlFor="model" className="text-gray-900 font-semibold">Model</Label>
             <Select value={model} onValueChange={setModel} disabled={!make}>
-              <SelectTrigger id="model">
+              <SelectTrigger id="model" className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Select model" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border-gray-300 z-50">
                 {availableModels.map((m) => (
-                  <SelectItem key={m} value={m}>
+                  <SelectItem key={m} value={m} className="text-gray-900">
                     {m}
                   </SelectItem>
                 ))}
@@ -267,22 +271,22 @@ const TireFinder = () => {
           </div>
 
           {suggestedSizes.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="tire-size">Suggested Tire Size</Label>
+            <div className="space-y-2 bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+              <Label htmlFor="tire-size" className="text-gray-900 font-semibold">Suggested Tire Size</Label>
               <Select value={selectedSize} onValueChange={setSelectedSize}>
-                <SelectTrigger id="tire-size">
+                <SelectTrigger id="tire-size" className="bg-white border-gray-300 text-gray-900">
                   <SelectValue placeholder="Select tire size" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border-gray-300 z-50">
                   {suggestedSizes.map((size) => (
-                    <SelectItem key={size} value={size}>
+                    <SelectItem key={size} value={size} className="text-gray-900">
                       {size}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-sm text-muted-foreground">
-                These tire sizes are compatible with your vehicle
+              <p className="text-sm text-blue-900 font-medium">
+                ✓ These tire sizes are compatible with your vehicle
               </p>
             </div>
           )}
@@ -290,14 +294,15 @@ const TireFinder = () => {
 
         <TabsContent value="size" className="space-y-4 mt-6">
           <div className="space-y-2">
-            <Label htmlFor="direct-size">Tire Size</Label>
+            <Label htmlFor="direct-size" className="text-gray-900 font-semibold">Tire Size</Label>
             <Input
               id="direct-size"
               value={directSize}
               onChange={(e) => setDirectSize(e.target.value)}
               placeholder="e.g., 215/55R17"
+              className="bg-white border-gray-300 text-gray-900"
             />
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-700">
               Enter your tire size (found on your tire sidewall)
             </p>
           </div>

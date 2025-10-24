@@ -24,11 +24,32 @@ const makes = [
 ];
 
 const modelsByMake: Record<string, string[]> = {
-  "Toyota": ["Camry", "Corolla", "RAV4", "Highlander", "Tacoma", "Tundra", "4Runner", "Prius"],
-  "Honda": ["Accord", "Civic", "CR-V", "Pilot", "Odyssey", "Ridgeline"],
-  "Ford": ["F-150", "Mustang", "Explorer", "Escape", "Edge", "Bronco"],
-  "Chevrolet": ["Silverado", "Equinox", "Traverse", "Malibu", "Tahoe", "Suburban"],
-  "Default": ["Model 1", "Model 2", "Model 3"]
+  "Acura": ["ILX", "Integra", "TLX", "MDX", "RDX", "NSX"],
+  "Audi": ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q5", "Q7", "Q8", "e-tron", "R8"],
+  "BMW": ["2 Series", "3 Series", "4 Series", "5 Series", "7 Series", "8 Series", "X1", "X3", "X5", "X7", "Z4", "i4", "iX"],
+  "Buick": ["Enclave", "Encore", "Encore GX", "Envision"],
+  "Cadillac": ["CT4", "CT5", "Escalade", "XT4", "XT5", "XT6", "Lyriq"],
+  "Chevrolet": ["Silverado 1500", "Silverado 2500HD", "Colorado", "Blazer", "Equinox", "Traverse", "Tahoe", "Suburban", "Trax", "Trailblazer", "Malibu", "Camaro", "Corvette", "Bolt EV", "Bolt EUV"],
+  "Chrysler": ["300", "Pacifica", "Voyager"],
+  "Dodge": ["Charger", "Challenger", "Durango", "Hornet"],
+  "Ford": ["F-150", "F-250", "F-350", "Ranger", "Maverick", "Bronco", "Bronco Sport", "Explorer", "Expedition", "Escape", "Edge", "EcoSport", "Mustang", "Mustang Mach-E"],
+  "GMC": ["Sierra 1500", "Sierra 2500HD", "Canyon", "Terrain", "Acadia", "Yukon", "Yukon XL", "Hummer EV"],
+  "Honda": ["Accord", "Civic", "Civic Type R", "Insight", "CR-V", "HR-V", "Passport", "Pilot", "Odyssey", "Ridgeline"],
+  "Hyundai": ["Elantra", "Sonata", "Accent", "Venue", "Kona", "Tucson", "Santa Fe", "Palisade", "Ioniq 5", "Ioniq 6"],
+  "Infiniti": ["Q50", "Q60", "QX50", "QX55", "QX60", "QX80"],
+  "Jeep": ["Compass", "Cherokee", "Grand Cherokee", "Wrangler", "Gladiator", "Renegade", "Grand Wagoneer", "Wagoneer"],
+  "Kia": ["Forte", "K5", "Stinger", "Soul", "Seltos", "Sportage", "Sorento", "Telluride", "Carnival", "Niro", "EV6"],
+  "Lexus": ["IS", "ES", "LS", "RC", "LC", "UX", "NX", "RX", "GX", "LX"],
+  "Lincoln": ["Corsair", "Nautilus", "Aviator", "Navigator"],
+  "Mazda": ["Mazda3", "Mazda6", "CX-3", "CX-30", "CX-5", "CX-50", "CX-9", "CX-90", "MX-5 Miata"],
+  "Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "S-Class", "CLA", "CLS", "GLA", "GLB", "GLC", "GLE", "GLS", "G-Class", "EQS", "EQE"],
+  "Nissan": ["Versa", "Sentra", "Altima", "Maxima", "370Z", "GT-R", "Kicks", "Rogue", "Murano", "Pathfinder", "Armada", "Frontier", "Titan", "Ariya", "Leaf"],
+  "Ram": ["1500", "2500", "3500", "ProMaster"],
+  "Subaru": ["Impreza", "Legacy", "WRX", "BRZ", "Crosstrek", "Forester", "Outback", "Ascent", "Solterra"],
+  "Tesla": ["Model 3", "Model S", "Model X", "Model Y"],
+  "Toyota": ["Camry", "Corolla", "Corolla Cross", "Crown", "Avalon", "Prius", "GR86", "GR Supra", "RAV4", "Highlander", "4Runner", "Sequoia", "Land Cruiser", "Tacoma", "Tundra", "Sienna", "bZ4X"],
+  "Volkswagen": ["Jetta", "Passat", "Arteon", "Golf GTI", "Golf R", "Taos", "Tiguan", "Atlas", "Atlas Cross Sport", "ID.4"],
+  "Volvo": ["S60", "S90", "V60", "V90", "XC40", "XC60", "XC90", "C40 Recharge"]
 };
 
 // Tire size database by vehicle

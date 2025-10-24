@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 30 }, (_, i) => (currentYear - i).toString());
@@ -52,16 +54,6 @@ const modelsByMake: Record<string, string[]> = {
   "Volvo": ["S60", "S90", "V60", "V90", "XC40", "XC60", "XC90", "C40 Recharge"]
 };
 
-// Tire size database by vehicle
-const tireSizesByVehicle: Record<string, string[]> = {
-  "2024-Toyota-Camry": ["215/55R17", "235/45R18"],
-  "2024-Toyota-Corolla": ["205/55R16", "225/40R18"],
-  "2024-Honda-Civic": ["215/55R16", "235/40R18"],
-  "2024-Honda-Accord": ["225/50R17", "235/40R19"],
-  "2024-Ford-F-150": ["265/70R17", "275/55R20"],
-  "2024-Ford-Mustang": ["235/55R17", "255/40R19"],
-  "Default": ["215/60R16", "225/55R17", "235/50R18"]
-};
 
 const TireFinder = () => {
   const { toast } = useToast();
@@ -74,6 +66,7 @@ const TireFinder = () => {
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [suggestedSizes, setSuggestedSizes] = useState<string[]>([]);
   const [selectedSize, setSelectedSize] = useState("");
+  const [loadingSizes, setLoadingSizes] = useState(false);
   
   // Direct size search state
   const [directSize, setDirectSize] = useState("");
@@ -95,13 +88,53 @@ const TireFinder = () => {
   }, [make]);
 
   useEffect(() => {
-    if (year && make && model) {
-      const vehicleKey = `${year}-${make}-${model}`;
-      const sizes = tireSizesByVehicle[vehicleKey] || tireSizesByVehicle["Default"];
-      setSuggestedSizes(sizes);
-      setSelectedSize(sizes[0]);
-    }
-  }, [year, make, model]);
+    const fetchTireSizes = async () => {
+      if (year && make && model) {
+        setLoadingSizes(true);
+        try {
+          const { data, error } = await supabase
+            .from('vehicle_tire_sizes')
+            .select('tire_sizes')
+            .eq('year', year)
+            .eq('make', make)
+            .eq('model', model)
+            .maybeSingle();
+
+          if (error) {
+            console.error('Error fetching tire sizes:', error);
+            toast({
+              title: "Error",
+              description: "Could not fetch tire sizes. Using default values.",
+              variant: "destructive"
+            });
+            // Fallback to default sizes
+            setSuggestedSizes(['215/60R16', '225/55R17']);
+            setSelectedSize('215/60R16');
+          } else if (data && data.tire_sizes) {
+            setSuggestedSizes(data.tire_sizes);
+            setSelectedSize(data.tire_sizes[0]);
+          } else {
+            // No data found for this vehicle
+            toast({
+              title: "No Data Available",
+              description: "Tire sizes not found for this vehicle. Please contact us for assistance.",
+              variant: "destructive"
+            });
+            setSuggestedSizes([]);
+            setSelectedSize('');
+          }
+        } catch (err) {
+          console.error('Unexpected error:', err);
+          setSuggestedSizes(['215/60R16', '225/55R17']);
+          setSelectedSize('215/60R16');
+        } finally {
+          setLoadingSizes(false);
+        }
+      }
+    };
+
+    fetchTireSizes();
+  }, [year, make, model, toast]);
 
   const handleFindTires = () => {
     if (searchType === "vehicle") {
@@ -291,7 +324,14 @@ const TireFinder = () => {
             </Select>
           </div>
 
-          {suggestedSizes.length > 0 && (
+          {loadingSizes && (
+            <div className="flex items-center justify-center gap-2 p-4">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span className="text-gray-700 font-medium">Loading tire sizes...</span>
+            </div>
+          )}
+
+          {!loadingSizes && suggestedSizes.length > 0 && (
             <div className="space-y-2 bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
               <Label htmlFor="tire-size" className="text-gray-900 font-semibold">Suggested Tire Size</Label>
               <Select value={selectedSize} onValueChange={setSelectedSize}>

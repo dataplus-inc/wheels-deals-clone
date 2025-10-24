@@ -14,7 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      vehicle_tire_sizes: {
+        Row: {
+          created_at: string
+          id: string
+          make: string
+          model: string
+          tire_sizes: string[]
+          year: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          make: string
+          model: string
+          tire_sizes: string[]
+          year: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          make?: string
+          model?: string
+          tire_sizes?: string[]
+          year?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

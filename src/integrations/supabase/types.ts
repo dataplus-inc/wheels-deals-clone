@@ -21,6 +21,7 @@ export type Database = {
           make: string
           model: string
           tire_sizes: string[]
+          trim: string | null
           year: string
         }
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           make: string
           model: string
           tire_sizes: string[]
+          trim?: string | null
           year: string
         }
         Update: {
@@ -37,6 +39,7 @@ export type Database = {
           make?: string
           model?: string
           tire_sizes?: string[]
+          trim?: string | null
           year?: string
         }
         Relationships: []

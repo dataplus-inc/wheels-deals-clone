@@ -18,42 +18,6 @@ import { Loader2 } from "lucide-react";
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 30 }, (_, i) => (currentYear - i).toString());
 
-const makes = [
-  "Acura", "Audi", "BMW", "Buick", "Cadillac", "Chevrolet", "Chrysler",
-  "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Infiniti", "Jeep", "Kia",
-  "Lexus", "Lincoln", "Mazda", "Mercedes-Benz", "Nissan", "Ram", "Subaru",
-  "Tesla", "Toyota", "Volkswagen", "Volvo"
-];
-
-const modelsByMake: Record<string, string[]> = {
-  "Acura": ["ILX", "Integra", "TLX", "MDX", "RDX", "NSX"],
-  "Audi": ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q5", "Q7", "Q8", "e-tron", "R8"],
-  "BMW": ["2 Series", "3 Series", "4 Series", "5 Series", "7 Series", "8 Series", "X1", "X3", "X5", "X7", "Z4", "i4", "iX"],
-  "Buick": ["Enclave", "Encore", "Encore GX", "Envision"],
-  "Cadillac": ["CT4", "CT5", "Escalade", "XT4", "XT5", "XT6", "Lyriq"],
-  "Chevrolet": ["Silverado 1500", "Silverado 2500HD", "Colorado", "Blazer", "Equinox", "Traverse", "Tahoe", "Suburban", "Trax", "Trailblazer", "Malibu", "Camaro", "Corvette", "Bolt EV", "Bolt EUV"],
-  "Chrysler": ["300", "Pacifica", "Voyager"],
-  "Dodge": ["Charger", "Challenger", "Durango", "Hornet"],
-  "Ford": ["F-150", "F-250", "F-350", "Ranger", "Maverick", "Bronco", "Bronco Sport", "Explorer", "Expedition", "Escape", "Edge", "EcoSport", "Mustang", "Mustang Mach-E"],
-  "GMC": ["Sierra 1500", "Sierra 2500HD", "Canyon", "Terrain", "Acadia", "Yukon", "Yukon XL", "Hummer EV"],
-  "Honda": ["Accord", "Civic", "Civic Type R", "Insight", "CR-V", "HR-V", "Passport", "Pilot", "Odyssey", "Ridgeline"],
-  "Hyundai": ["Elantra", "Sonata", "Accent", "Venue", "Kona", "Tucson", "Santa Fe", "Palisade", "Ioniq 5", "Ioniq 6"],
-  "Infiniti": ["Q50", "Q60", "QX50", "QX55", "QX60", "QX80"],
-  "Jeep": ["Compass", "Cherokee", "Grand Cherokee", "Wrangler", "Gladiator", "Renegade", "Grand Wagoneer", "Wagoneer"],
-  "Kia": ["Forte", "K5", "Stinger", "Soul", "Seltos", "Sportage", "Sorento", "Telluride", "Carnival", "Niro", "EV6"],
-  "Lexus": ["IS", "ES", "LS", "RC", "LC", "UX", "NX", "RX", "GX", "LX"],
-  "Lincoln": ["Corsair", "Nautilus", "Aviator", "Navigator"],
-  "Mazda": ["Mazda3", "Mazda6", "CX-3", "CX-30", "CX-5", "CX-50", "CX-9", "CX-90", "MX-5 Miata"],
-  "Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "S-Class", "CLA", "CLS", "GLA", "GLB", "GLC", "GLE", "GLS", "G-Class", "EQS", "EQE"],
-  "Nissan": ["Versa", "Sentra", "Altima", "Maxima", "370Z", "GT-R", "Kicks", "Rogue", "Murano", "Pathfinder", "Armada", "Frontier", "Titan", "Ariya", "Leaf"],
-  "Ram": ["1500", "2500", "3500", "ProMaster"],
-  "Subaru": ["Impreza", "Legacy", "WRX", "BRZ", "Crosstrek", "Forester", "Outback", "Ascent", "Solterra"],
-  "Tesla": ["Model 3", "Model S", "Model X", "Model Y"],
-  "Toyota": ["Camry", "Corolla", "Corolla Cross", "Crown", "Avalon", "Prius", "GR86", "GR Supra", "RAV4", "Highlander", "4Runner", "Sequoia", "Land Cruiser", "Tacoma", "Tundra", "Sienna", "bZ4X"],
-  "Volkswagen": ["Jetta", "Passat", "Arteon", "Golf GTI", "Golf R", "Taos", "Tiguan", "Atlas", "Atlas Cross Sport", "ID.4"],
-  "Volvo": ["S60", "S90", "V60", "V90", "XC40", "XC60", "XC90", "C40 Recharge"]
-};
-
 
 const TireFinder = () => {
   const { toast } = useToast();
@@ -63,9 +27,15 @@ const TireFinder = () => {
   const [year, setYear] = useState("");
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
+  const [trim, setTrim] = useState("");
+  const [availableMakes, setAvailableMakes] = useState<string[]>([]);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [availableTrims, setAvailableTrims] = useState<string[]>([]);
   const [suggestedSizes, setSuggestedSizes] = useState<string[]>([]);
   const [selectedSize, setSelectedSize] = useState("");
+  const [loadingMakes, setLoadingMakes] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [loadingTrims, setLoadingTrims] = useState(false);
   const [loadingSizes, setLoadingSizes] = useState(false);
   
   // Direct size search state
@@ -78,27 +48,132 @@ const TireFinder = () => {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Fetch makes when year changes
   useEffect(() => {
-    if (make) {
-      setAvailableModels(modelsByMake[make] || modelsByMake["Default"]);
-      setModel("");
-      setSuggestedSizes([]);
-      setSelectedSize("");
-    }
-  }, [make]);
+    const fetchMakes = async () => {
+      if (year) {
+        setLoadingMakes(true);
+        setMake("");
+        setModel("");
+        setTrim("");
+        setAvailableModels([]);
+        setAvailableTrims([]);
+        setSuggestedSizes([]);
+        
+        try {
+          const { data, error } = await supabase.functions.invoke('get-vehicle-makes', {
+            body: { year }
+          });
 
+          if (error) throw error;
+          setAvailableMakes(data.makes || []);
+        } catch (error) {
+          console.error('Error fetching makes:', error);
+          toast({
+            title: "Error",
+            description: "Could not load vehicle makes. Please try again.",
+            variant: "destructive"
+          });
+        } finally {
+          setLoadingMakes(false);
+        }
+      }
+    };
+
+    fetchMakes();
+  }, [year, toast]);
+
+  // Fetch models when make changes
+  useEffect(() => {
+    const fetchModels = async () => {
+      if (year && make) {
+        setLoadingModels(true);
+        setModel("");
+        setTrim("");
+        setAvailableTrims([]);
+        setSuggestedSizes([]);
+        
+        try {
+          const { data, error } = await supabase.functions.invoke('get-vehicle-models', {
+            body: { year, make }
+          });
+
+          if (error) throw error;
+          setAvailableModels(data.models || []);
+        } catch (error) {
+          console.error('Error fetching models:', error);
+          toast({
+            title: "Error",
+            description: "Could not load vehicle models. Please try again.",
+            variant: "destructive"
+          });
+        } finally {
+          setLoadingModels(false);
+        }
+      }
+    };
+
+    fetchModels();
+  }, [year, make, toast]);
+
+  // Fetch trims when model changes
+  useEffect(() => {
+    const fetchTrims = async () => {
+      if (year && make && model) {
+        setLoadingTrims(true);
+        setTrim("");
+        setSuggestedSizes([]);
+        
+        try {
+          const { data, error } = await supabase.functions.invoke('get-vehicle-trims', {
+            body: { year, make, model }
+          });
+
+          if (error) throw error;
+          
+          if (data.trims && data.trims.length > 0) {
+            setAvailableTrims(data.trims);
+          } else {
+            // No trims available, fetch tire sizes without trim
+            setAvailableTrims([]);
+            setTrim(""); // Clear trim selection
+          }
+        } catch (error) {
+          console.error('Error fetching trims:', error);
+          setAvailableTrims([]);
+        } finally {
+          setLoadingTrims(false);
+        }
+      }
+    };
+
+    fetchTrims();
+  }, [year, make, model, toast]);
+
+  // Fetch tire sizes when trim changes or when model is selected without trims
   useEffect(() => {
     const fetchTireSizes = async () => {
-      if (year && make && model) {
+      // Only fetch if we have year, make, model AND either:
+      // 1. No trims are available (trim field will be empty)
+      // 2. A trim has been selected
+      const shouldFetch = year && make && model && (availableTrims.length === 0 || trim);
+      
+      if (shouldFetch) {
         setLoadingSizes(true);
         try {
-          const { data, error } = await supabase
+          let query = supabase
             .from('vehicle_tire_sizes')
             .select('tire_sizes')
             .eq('year', year)
             .eq('make', make)
-            .eq('model', model)
-            .maybeSingle();
+            .eq('model', model);
+
+          // Add trim filter if trim is selected
+          if (trim) {
+            query = query.eq('trim', trim);
+          }
+
+          const { data, error } = await query.maybeSingle();
 
           if (error) {
             console.error('Error fetching tire sizes:', error);
@@ -134,14 +209,23 @@ const TireFinder = () => {
     };
 
     fetchTireSizes();
-  }, [year, make, model, toast]);
+  }, [year, make, model, trim, availableTrims, toast]);
 
   const handleFindTires = () => {
     if (searchType === "vehicle") {
       if (!year || !make || !model || !selectedSize) {
         toast({
           title: "Missing Information",
-          description: "Please select your vehicle and tire size.",
+          description: "Please complete all vehicle selections and tire size.",
+          variant: "destructive"
+        });
+        return;
+      }
+      // Check if trims are available but none selected
+      if (availableTrims.length > 0 && !trim) {
+        toast({
+          title: "Missing Information",
+          description: "Please select a trim/edition for your vehicle.",
           variant: "destructive"
         });
         return;
@@ -171,7 +255,7 @@ const TireFinder = () => {
     }
 
     const vehicleInfo = searchType === "vehicle" 
-      ? `${year} ${make} ${model} - Tire Size: ${selectedSize}`
+      ? `${year} ${make} ${model}${trim ? ` ${trim}` : ''} - Tire Size: ${selectedSize}`
       : `Tire Size: ${directSize}`;
 
     toast({
@@ -194,7 +278,7 @@ const TireFinder = () => {
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Request a Quotation</h3>
           <p className="text-gray-700 font-medium">
             {searchType === "vehicle" 
-              ? `${year} ${make} ${model} - Tire Size: ${selectedSize}`
+              ? `${year} ${make} ${model}${trim ? ` ${trim}` : ''} - Tire Size: ${selectedSize}`
               : `Tire Size: ${directSize}`}
           </p>
         </div>
@@ -294,12 +378,12 @@ const TireFinder = () => {
 
           <div className="space-y-2">
             <Label htmlFor="make" className="text-gray-900 font-semibold">Make</Label>
-            <Select value={make} onValueChange={setMake} disabled={!year}>
+            <Select value={make} onValueChange={setMake} disabled={!year || loadingMakes}>
               <SelectTrigger id="make" className="bg-white border-gray-300 text-gray-900">
-                <SelectValue placeholder="Select make" />
+                <SelectValue placeholder={loadingMakes ? "Loading makes..." : "Select make"} />
               </SelectTrigger>
               <SelectContent className="bg-white border-gray-300 z-50">
-                {makes.map((m) => (
+                {availableMakes.map((m) => (
                   <SelectItem key={m} value={m} className="text-gray-900">
                     {m}
                   </SelectItem>
@@ -310,9 +394,9 @@ const TireFinder = () => {
 
           <div className="space-y-2">
             <Label htmlFor="model" className="text-gray-900 font-semibold">Model</Label>
-            <Select value={model} onValueChange={setModel} disabled={!make}>
+            <Select value={model} onValueChange={setModel} disabled={!make || loadingModels}>
               <SelectTrigger id="model" className="bg-white border-gray-300 text-gray-900">
-                <SelectValue placeholder="Select model" />
+                <SelectValue placeholder={loadingModels ? "Loading models..." : "Select model"} />
               </SelectTrigger>
               <SelectContent className="bg-white border-gray-300 z-50">
                 {availableModels.map((m) => (
@@ -323,6 +407,31 @@ const TireFinder = () => {
               </SelectContent>
             </Select>
           </div>
+
+          {loadingTrims && (
+            <div className="flex items-center justify-center gap-2 p-4">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span className="text-gray-700 font-medium">Loading trims...</span>
+            </div>
+          )}
+
+          {!loadingTrims && availableTrims.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="trim" className="text-gray-900 font-semibold">Trim / Edition</Label>
+              <Select value={trim} onValueChange={setTrim}>
+                <SelectTrigger id="trim" className="bg-white border-gray-300 text-gray-900">
+                  <SelectValue placeholder="Select trim" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-300 z-50">
+                  {availableTrims.map((t) => (
+                    <SelectItem key={t} value={t} className="text-gray-900">
+                      {t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {loadingSizes && (
             <div className="flex items-center justify-center gap-2 p-4">

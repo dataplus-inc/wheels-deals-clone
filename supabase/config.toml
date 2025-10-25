@@ -1,1 +1,10 @@
 project_id = "nwoeeduzopsuwdcfwfjp"
+
+[functions.get-vehicle-makes]
+verify_jwt = false
+
+[functions.get-vehicle-models]
+verify_jwt = false
+
+[functions.get-vehicle-trims]
+verify_jwt = false

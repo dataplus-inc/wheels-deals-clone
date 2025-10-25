@@ -23,32 +23,81 @@ serve(async (req) => {
 
     console.log(`Fetching trims for ${year} ${make} ${model}`);
 
-    // Create Supabase client
+    // First, try to get trims from database
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch distinct trims from database
-    const { data, error } = await supabase
+    const { data: dbData, error: dbError } = await supabase
       .from('vehicle_tire_sizes')
-      .select('trim')
+      .select('trim, tire_sizes')
       .eq('year', year)
       .eq('make', make)
       .eq('model', model)
       .not('trim', 'is', null);
 
-    if (error) {
-      console.error('Database error:', error);
-      throw error;
+    if (!dbError && dbData && dbData.length > 0) {
+      // Found trims in database
+      const trimsWithSizes = dbData.map(item => ({
+        trim: item.trim,
+        tire_sizes: item.tire_sizes
+      }));
+      console.log(`Found ${trimsWithSizes.length} trims in database`);
+      
+      return new Response(
+        JSON.stringify({ 
+          trims: trimsWithSizes.map(t => t.trim).filter(Boolean).sort(),
+          source: 'database'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Extract unique trims
-    const trims = [...new Set(data.map(item => item.trim))].filter(Boolean).sort();
+    // If no database trims, try NHTSA API to get vehicle variations
+    console.log('No database trims found, trying NHTSA API');
+    
+    const makeEncoded = encodeURIComponent(make);
+    const modelEncoded = encodeURIComponent(model);
+    
+    // Get vehicle details from NHTSA
+    const response = await fetch(
+      `https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${makeEncoded}/modelyear/${year}?format=json`
+    );
 
-    console.log(`Found ${trims.length} trims`);
+    if (!response.ok) {
+      console.log('NHTSA API error, returning empty trims');
+      return new Response(
+        JSON.stringify({ trims: [], source: 'none' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const data = await response.json();
+    
+    // Look for variations of the model that might indicate trims
+    const modelVariations = data.Results
+      .filter((item: any) => {
+        const modelName = item.Model_Name?.toLowerCase() || '';
+        const searchModel = model.toLowerCase();
+        return modelName.includes(searchModel) && modelName !== searchModel;
+      })
+      .map((item: any) => {
+        // Extract the trim part (everything after the base model name)
+        const modelName = item.Model_Name || '';
+        const trimPart = modelName.replace(new RegExp(model, 'i'), '').trim();
+        return trimPart;
+      })
+      .filter((trim: string) => trim && trim.length > 0);
+
+    const uniqueTrims = [...new Set(modelVariations)].sort();
+    
+    console.log(`Found ${uniqueTrims.length} potential trims from NHTSA`);
 
     return new Response(
-      JSON.stringify({ trims }),
+      JSON.stringify({ 
+        trims: uniqueTrims,
+        source: 'nhtsa'
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

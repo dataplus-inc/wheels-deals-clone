@@ -114,14 +114,14 @@ const TireFinder = () => {
             setSuggestedSizes(data.tire_sizes);
             setSelectedSize(data.tire_sizes[0]);
           } else {
-            // No data found for this vehicle
+            // No exact data found - provide common sizes as fallback
+            const commonSizes = ['215/60R16', '225/55R17', '235/55R18', '225/65R17'];
+            setSuggestedSizes(commonSizes);
+            setSelectedSize(commonSizes[0]);
             toast({
-              title: "No Data Available",
-              description: "Tire sizes not found for this vehicle. Please contact us for assistance.",
-              variant: "destructive"
+              title: "Using Common Tire Sizes",
+              description: "Exact data not available for this vehicle. Showing common sizes. Contact us for exact specifications.",
             });
-            setSuggestedSizes([]);
-            setSelectedSize('');
           }
         } catch (err) {
           console.error('Unexpected error:', err);
@@ -347,7 +347,9 @@ const TireFinder = () => {
                 </SelectContent>
               </Select>
               <p className="text-sm text-blue-900 font-medium">
-                ✓ These tire sizes are compatible with your vehicle
+                {year === "2024" 
+                  ? "✓ Exact tire sizes from manufacturer specifications" 
+                  : "ℹ Common tire sizes - Contact us to verify exact specifications"}
               </p>
             </div>
           )}

@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,44 +21,11 @@ serve(async (req) => {
     }
 
     console.log(`Fetching trims for ${year} ${make} ${model}`);
-
-    // First, try to get trims from database
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const { data: dbData, error: dbError } = await supabase
-      .from('vehicle_tire_sizes')
-      .select('trim, tire_sizes')
-      .eq('year', year)
-      .eq('make', make)
-      .eq('model', model)
-      .not('trim', 'is', null);
-
-    if (!dbError && dbData && dbData.length > 0) {
-      // Found trims in database
-      const trimsWithSizes = dbData.map(item => ({
-        trim: item.trim,
-        tire_sizes: item.tire_sizes
-      }));
-      console.log(`Found ${trimsWithSizes.length} trims in database`);
-      
-      return new Response(
-        JSON.stringify({ 
-          trims: trimsWithSizes.map(t => t.trim).filter(Boolean).sort(),
-          source: 'database'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // If no database trims, try NHTSA API to get vehicle variations
-    console.log('No database trims found, trying NHTSA API');
     
     const makeEncoded = encodeURIComponent(make);
     const modelEncoded = encodeURIComponent(model);
     
-    // Get vehicle details from NHTSA
+    // Get vehicle details from NHTSA API with model variations
     const response = await fetch(
       `https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${makeEncoded}/modelyear/${year}?format=json`
     );
@@ -67,31 +33,42 @@ serve(async (req) => {
     if (!response.ok) {
       console.log('NHTSA API error, returning empty trims');
       return new Response(
-        JSON.stringify({ trims: [], source: 'none' }),
+        JSON.stringify({ trims: [], source: 'nhtsa' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const data = await response.json();
     
-    // Look for variations of the model that might indicate trims
-    const modelVariations = data.Results
+    // Extract all model variations that contain the base model name
+    const modelLower = model.toLowerCase();
+    const allVariations = data.Results
       .filter((item: any) => {
-        const modelName = item.Model_Name?.toLowerCase() || '';
-        const searchModel = model.toLowerCase();
-        return modelName.includes(searchModel) && modelName !== searchModel;
+        const modelName = (item.Model_Name || '').toLowerCase();
+        // Match variations of the model (e.g., "Camry LE", "Camry XLE" for "Camry")
+        return modelName.includes(modelLower);
       })
-      .map((item: any) => {
-        // Extract the trim part (everything after the base model name)
-        const modelName = item.Model_Name || '';
-        const trimPart = modelName.replace(new RegExp(model, 'i'), '').trim();
+      .map((item: any) => item.Model_Name || '');
+    
+    console.log(`Found ${allVariations.length} model variations from NHTSA`);
+    
+    // Extract trim names by removing the base model name
+    const trims = allVariations
+      .map((variation: string) => {
+        // Remove the base model name to get the trim
+        const trimPart = variation
+          .replace(new RegExp(`^${model}\\s*`, 'i'), '')
+          .trim();
         return trimPart;
       })
-      .filter((trim: string) => trim && trim.length > 0);
+      .filter((trim: string) => {
+        // Keep non-empty trims that don't match the full model name
+        return trim && trim.length > 0 && trim.toLowerCase() !== modelLower;
+      });
 
-    const uniqueTrims = [...new Set(modelVariations)].sort();
+    const uniqueTrims = [...new Set(trims)].sort();
     
-    console.log(`Found ${uniqueTrims.length} potential trims from NHTSA`);
+    console.log(`Extracted ${uniqueTrims.length} unique trims from NHTSA`);
 
     return new Response(
       JSON.stringify({ 

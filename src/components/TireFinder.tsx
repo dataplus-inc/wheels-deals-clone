@@ -161,19 +161,10 @@ const TireFinder = () => {
       if (shouldFetch) {
         setLoadingSizes(true);
         try {
-          let query = supabase
-            .from('vehicle_tire_sizes')
-            .select('tire_sizes')
-            .eq('year', year)
-            .eq('make', make)
-            .eq('model', model);
-
-          // Add trim filter if trim is selected
-          if (trim) {
-            query = query.eq('trim', trim);
-          }
-
-          const { data, error } = await query;
+          // Use edge function to get tire sizes from live data
+          const { data, error } = await supabase.functions.invoke('get-tire-sizes', {
+            body: { year, make, model, trim }
+          });
 
           if (error) {
             console.error('Error fetching tire sizes:', error);
@@ -183,68 +174,27 @@ const TireFinder = () => {
             setSelectedSize(commonSizes[0]);
             toast({
               title: "Using Common Tire Sizes",
-              description: "Exact data not available for this vehicle. Showing common sizes. Contact us for exact specifications.",
+              description: "Could not fetch tire data. Showing common sizes. Contact us for exact specifications.",
             });
-          } else if (data && data.length > 0) {
-            // Collect all unique tire sizes from all matching records
-            const allSizes = data.reduce((acc: string[], row) => {
-              if (row.tire_sizes) {
-                return [...acc, ...row.tire_sizes];
-              }
-              return acc;
-            }, []);
+          } else if (data && data.tire_sizes && data.tire_sizes.length > 0) {
+            setSuggestedSizes(data.tire_sizes);
+            setSelectedSize(data.tire_sizes[0]);
             
-            const uniqueSizes = [...new Set(allSizes)].sort();
-            
-            if (uniqueSizes.length > 0) {
-              setSuggestedSizes(uniqueSizes);
-              setSelectedSize(uniqueSizes[0]);
-            } else {
-              // No sizes found even though records exist
-              const commonSizes = ['215/60R16', '225/55R17', '235/55R18', '225/65R17'];
-              setSuggestedSizes(commonSizes);
-              setSelectedSize(commonSizes[0]);
+            // Only show toast if using estimated data
+            if (data.source === 'estimated') {
               toast({
-                title: "Using Common Tire Sizes",
-                description: "Exact data not available for this vehicle. Showing common sizes. Contact us for exact specifications.",
+                title: "Estimated Tire Sizes",
+                description: data.note || "Showing common sizes for this vehicle type. Contact us for exact specifications.",
               });
             }
           } else {
-            // If trim was selected but no data found, try without trim as fallback
-            if (trim) {
-              const fallbackQuery = await supabase
-                .from('vehicle_tire_sizes')
-                .select('tire_sizes')
-                .eq('year', year)
-                .eq('make', make)
-                .eq('model', model);
-              
-              if (fallbackQuery.data && fallbackQuery.data.length > 0) {
-                const allSizes = fallbackQuery.data.reduce((acc: string[], row) => {
-                  if (row.tire_sizes) {
-                    return [...acc, ...row.tire_sizes];
-                  }
-                  return acc;
-                }, []);
-                
-                const uniqueSizes = [...new Set(allSizes)].sort();
-                setSuggestedSizes(uniqueSizes);
-                setSelectedSize(uniqueSizes[0]);
-                toast({
-                  title: "Using General Tire Sizes",
-                  description: "Exact data for this trim not available. Showing sizes for this model. Verify with us for your specific trim.",
-                });
-                return;
-              }
-            }
-            
-            // No data found at all - provide common sizes as fallback
+            // No data returned
             const commonSizes = ['215/60R16', '225/55R17', '235/55R18', '225/65R17'];
             setSuggestedSizes(commonSizes);
             setSelectedSize(commonSizes[0]);
             toast({
               title: "Using Common Tire Sizes",
-              description: "Exact data not available for this vehicle. Showing common sizes. Contact us for exact specifications.",
+              description: "Exact data not available. Showing common sizes. Contact us for exact specifications.",
             });
           }
         } catch (err) {

@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.get-vehicle-trims]
 verify_jwt = false
+
+[functions.get-tire-sizes]
+verify_jwt = false

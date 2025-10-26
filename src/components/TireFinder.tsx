@@ -173,23 +173,72 @@ const TireFinder = () => {
             query = query.eq('trim', trim);
           }
 
-          const { data, error } = await query.maybeSingle();
+          const { data, error } = await query;
 
           if (error) {
             console.error('Error fetching tire sizes:', error);
-            toast({
-              title: "Error",
-              description: "Could not fetch tire sizes. Using default values.",
-              variant: "destructive"
-            });
             // Fallback to default sizes
-            setSuggestedSizes(['215/60R16', '225/55R17']);
-            setSelectedSize('215/60R16');
-          } else if (data && data.tire_sizes) {
-            setSuggestedSizes(data.tire_sizes);
-            setSelectedSize(data.tire_sizes[0]);
+            const commonSizes = ['215/60R16', '225/55R17', '235/55R18', '225/65R17'];
+            setSuggestedSizes(commonSizes);
+            setSelectedSize(commonSizes[0]);
+            toast({
+              title: "Using Common Tire Sizes",
+              description: "Exact data not available for this vehicle. Showing common sizes. Contact us for exact specifications.",
+            });
+          } else if (data && data.length > 0) {
+            // Collect all unique tire sizes from all matching records
+            const allSizes = data.reduce((acc: string[], row) => {
+              if (row.tire_sizes) {
+                return [...acc, ...row.tire_sizes];
+              }
+              return acc;
+            }, []);
+            
+            const uniqueSizes = [...new Set(allSizes)].sort();
+            
+            if (uniqueSizes.length > 0) {
+              setSuggestedSizes(uniqueSizes);
+              setSelectedSize(uniqueSizes[0]);
+            } else {
+              // No sizes found even though records exist
+              const commonSizes = ['215/60R16', '225/55R17', '235/55R18', '225/65R17'];
+              setSuggestedSizes(commonSizes);
+              setSelectedSize(commonSizes[0]);
+              toast({
+                title: "Using Common Tire Sizes",
+                description: "Exact data not available for this vehicle. Showing common sizes. Contact us for exact specifications.",
+              });
+            }
           } else {
-            // No exact data found - provide common sizes as fallback
+            // If trim was selected but no data found, try without trim as fallback
+            if (trim) {
+              const fallbackQuery = await supabase
+                .from('vehicle_tire_sizes')
+                .select('tire_sizes')
+                .eq('year', year)
+                .eq('make', make)
+                .eq('model', model);
+              
+              if (fallbackQuery.data && fallbackQuery.data.length > 0) {
+                const allSizes = fallbackQuery.data.reduce((acc: string[], row) => {
+                  if (row.tire_sizes) {
+                    return [...acc, ...row.tire_sizes];
+                  }
+                  return acc;
+                }, []);
+                
+                const uniqueSizes = [...new Set(allSizes)].sort();
+                setSuggestedSizes(uniqueSizes);
+                setSelectedSize(uniqueSizes[0]);
+                toast({
+                  title: "Using General Tire Sizes",
+                  description: "Exact data for this trim not available. Showing sizes for this model. Verify with us for your specific trim.",
+                });
+                return;
+              }
+            }
+            
+            // No data found at all - provide common sizes as fallback
             const commonSizes = ['215/60R16', '225/55R17', '235/55R18', '225/65R17'];
             setSuggestedSizes(commonSizes);
             setSelectedSize(commonSizes[0]);

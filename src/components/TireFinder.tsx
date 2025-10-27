@@ -132,10 +132,15 @@ const TireFinder = () => {
           });
 
           if (error) throw error;
-          
+
+          console.log('Trims API response:', data);
+          console.log('Number of trims found:', data.trims?.length || 0);
+
           if (data.trims && data.trims.length > 0) {
+            console.log('Setting available trims:', data.trims);
             setAvailableTrims(data.trims);
           } else {
+            console.log('No trims available for this vehicle');
             setAvailableTrims([]);
             setTrim("");
           }
@@ -159,8 +164,16 @@ const TireFinder = () => {
       // 1. Trim check is complete AND no trims available
       // 2. A trim has been selected
       const shouldFetch = year && make && model && trimCheckComplete && (availableTrims.length === 0 || trim);
-      
+
+      console.log('Tire sizes fetch check:', {
+        year, make, model, trim,
+        trimCheckComplete,
+        availableTrimsLength: availableTrims.length,
+        shouldFetch
+      });
+
       if (shouldFetch) {
+        console.log('Fetching tire sizes...');
         setLoadingSizes(true);
         try {
           // Use edge function to get tire sizes from live data

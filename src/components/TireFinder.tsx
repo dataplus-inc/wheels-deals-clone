@@ -37,6 +37,7 @@ const TireFinder = () => {
   const [loadingModels, setLoadingModels] = useState(false);
   const [loadingTrims, setLoadingTrims] = useState(false);
   const [loadingSizes, setLoadingSizes] = useState(false);
+  const [trimCheckComplete, setTrimCheckComplete] = useState(false);
   
   // Direct size search state
   const [directSize, setDirectSize] = useState("");
@@ -121,6 +122,7 @@ const TireFinder = () => {
     const fetchTrims = async () => {
       if (year && make && model) {
         setLoadingTrims(true);
+        setTrimCheckComplete(false);
         setTrim("");
         setSuggestedSizes([]);
         
@@ -134,15 +136,15 @@ const TireFinder = () => {
           if (data.trims && data.trims.length > 0) {
             setAvailableTrims(data.trims);
           } else {
-            // No trims available, fetch tire sizes without trim
             setAvailableTrims([]);
-            setTrim(""); // Clear trim selection
+            setTrim("");
           }
         } catch (error) {
           console.error('Error fetching trims:', error);
           setAvailableTrims([]);
         } finally {
           setLoadingTrims(false);
+          setTrimCheckComplete(true);
         }
       }
     };
@@ -154,9 +156,9 @@ const TireFinder = () => {
   useEffect(() => {
     const fetchTireSizes = async () => {
       // Only fetch if we have year, make, model AND either:
-      // 1. No trims are available (trim field will be empty)
+      // 1. Trim check is complete AND no trims available
       // 2. A trim has been selected
-      const shouldFetch = year && make && model && (availableTrims.length === 0 || trim);
+      const shouldFetch = year && make && model && trimCheckComplete && (availableTrims.length === 0 || trim);
       
       if (shouldFetch) {
         setLoadingSizes(true);
@@ -208,7 +210,7 @@ const TireFinder = () => {
     };
 
     fetchTireSizes();
-  }, [year, make, model, trim, availableTrims, toast]);
+  }, [year, make, model, trim, availableTrims, trimCheckComplete, toast]);
 
   const handleFindTires = () => {
     if (searchType === "vehicle") {
